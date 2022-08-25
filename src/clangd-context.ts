@@ -13,11 +13,12 @@ import * as switchSourceHeader from './switch-source-header';
 import * as typeHierarchy from './type-hierarchy';
 
 export const clangdDocumentSelector = [
-  {scheme: 'file', language: 'c'},
-  {scheme: 'file', language: 'cpp'},
-  {scheme: 'file', language: 'cuda-cpp'},
-  {scheme: 'file', language: 'objective-c'},
-  {scheme: 'file', language: 'objective-cpp'},
+  { scheme: 'file', language: 'c' },
+  { scheme: 'file', language: 'cpp' },
+  {scheme: 'file', language: 'hc-cpp'},
+  { scheme: 'file', language: 'cuda-cpp' },
+  { scheme: 'file', language: 'objective-c' },
+  { scheme: 'file', language: 'objective-cpp' },
 ];
 
 export function isClangdDocument(document: vscode.TextDocument) {
@@ -34,25 +35,32 @@ class ClangdLanguageClient extends vscodelc.LanguageClient {
   // prompt up the failure to users.
 
   handleFailedRequest<T>(type: vscodelc.MessageSignature, error: any,
-                         token: vscode.CancellationToken|undefined,
-                         defaultValue: T): T {
+    token: vscode.CancellationToken | undefined,
+    defaultValue: T): T {
     if (error instanceof vscodelc.ResponseError &&
-        type.method === 'workspace/executeCommand')
+      type.method === 'workspace/executeCommand')
       vscode.window.showErrorMessage(error.message);
 
+    console.log("---------handleFailedRequest");
+    console.log("type:" + type.method);
+    console.log("error:" + error);
+    if (token instanceof Error) {
+      console.log("token:" + token.message);
+      console.log("token:" + token.stack);
+    }
     return super.handleFailedRequest(type, token, error, defaultValue);
   }
 }
 
 class EnableEditsNearCursorFeature implements vscodelc.StaticFeature {
-  initialize() {}
+  initialize() { }
   fillClientCapabilities(capabilities: vscodelc.ClientCapabilities): void {
     const extendedCompletionCapabilities: any =
-        capabilities.textDocument?.completion;
+      capabilities.textDocument?.completion;
     extendedCompletionCapabilities.editsNearCursor = true;
   }
-  getState(): vscodelc.FeatureState { return {kind: 'static'}; }
-  dispose() {}
+  getState(): vscodelc.FeatureState { return { kind: 'static' }; }
+  dispose() { }
 }
 
 export class ClangdContext implements vscode.Disposable {
@@ -60,22 +68,22 @@ export class ClangdContext implements vscode.Disposable {
   client!: ClangdLanguageClient;
 
   async activate(globalStoragePath: string, outputChannel: vscode.OutputChannel,
-                 workspaceState: vscode.Memento) {
+    workspaceState: vscode.Memento) {
     const clangdPath =
-        await install.activate(this, globalStoragePath, workspaceState);
+      await install.activate(this, globalStoragePath, workspaceState);
     if (!clangdPath)
       return;
 
     const clangd: vscodelc.Executable = {
       command: clangdPath,
       args:
-          await config.getSecureOrPrompt<string[]>('arguments', workspaceState),
-      options: {cwd: vscode.workspace.rootPath || process.cwd()}
+        await config.getSecureOrPrompt<string[]>('arguments', workspaceState),
+      options: { cwd: vscode.workspace.rootPath || process.cwd() }
     };
     const traceFile = config.get<string>('trace');
     if (!!traceFile) {
-      const trace = {CLANGD_TRACE: traceFile};
-      clangd.options = {env: {...process.env, ...trace}};
+      const trace = { CLANGD_TRACE: traceFile };
+      clangd.options = { env: { ...process.env, ...trace } };
     }
     const serverOptions: vscodelc.ServerOptions = clangd;
 
@@ -106,16 +114,16 @@ export class ClangdContext implements vscode.Disposable {
       // See https://github.com/microsoft/language-server-protocol/issues/898
       middleware: {
         provideCompletionItem: async (document, position, context, token,
-                                      next) => {
+          next) => {
           let list = await next(document, position, context, token);
           if (!config.get<boolean>('serverCompletionRanking'))
             return list;
           let items = (Array.isArray(list) ? list : list!.items).map(item => {
             // Gets the prefix used by VSCode when doing fuzzymatch.
             let prefix = document.getText(
-                new vscode.Range((item.range as vscode.Range).start, position))
+              new vscode.Range((item.range as vscode.Range).start, position))
             if (prefix)
-            item.filterText = prefix + '_' + item.filterText;
+              item.filterText = prefix + '_' + item.filterText;
             // Workaround for https://github.com/clangd/vscode-clangd/issues/357
             // clangd's used of commit-characters was well-intentioned, but
             // overall UX is poor. Due to vscode-languageclient bugs, we didn't
@@ -152,11 +160,11 @@ export class ClangdContext implements vscode.Disposable {
     };
 
     this.client = new ClangdLanguageClient('Clang Language Server',
-                                           serverOptions, clientOptions);
+      serverOptions, clientOptions);
     this.client.clientOptions.errorHandler =
-        this.client.createDefaultErrorHandler(
-            // max restart count
-            config.get<boolean>('restartAfterCrash') ? /*default*/ 4 : 0);
+      this.client.createDefaultErrorHandler(
+        // max restart count
+        config.get<boolean>('restartAfterCrash') ? /*default*/ 4 : 0);
     this.client.registerFeature(new EnableEditsNearCursorFeature);
     typeHierarchy.activate(this);
     inlayHints.activate(this);
@@ -172,7 +180,7 @@ export class ClangdContext implements vscode.Disposable {
 
   get visibleClangdEditors(): vscode.TextEditor[] {
     return vscode.window.visibleTextEditors.filter(
-        (e) => isClangdDocument(e.document));
+      (e) => isClangdDocument(e.document));
   }
 
   dispose() {

@@ -21,5 +21,6 @@
         "reveal": "silent",
     },
 
-    "args": ["run", "compile"],
+    // Build bundle with sourcemaps, suitable for debugging.
+    "args": ["run", "esbuild", "--", "--sourcemap"],
 }

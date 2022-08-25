@@ -12,7 +12,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
   const clangdContext = new ClangdContext;
   context.subscriptions.push(clangdContext);
-
+  console.log("helen_extension....");
   // An empty place holder for the activate command, otherwise we'll get an
   // "command is not registered" error.
   context.subscriptions.push(
