@@ -3,7 +3,7 @@
     "displayName": "stc-hc",
     "description": "hc completion, navigation, and insights",
     "version": "0.1.17",
-    "publisher": "llvm-vs-code-extensions",
+    "publisher": "stc-vs-code-extensions",
     "license": "MIT",
     "homepage": "https://clangd.llvm.org/",
     "icon": "icon.png",
@@ -42,7 +42,7 @@
         "ts-compile": "tsc -watch -p ./",
         "format": "clang-format -i --glob=\"{src,test}/*.ts\"",
         "test": "tsc -p ./ && node ./out/test/index.js",
-        "package": "vsce package --baseImagesUrl https://raw.githubusercontent.com/clangd/vscode-clangd/master/",
+        "package": "vsce package --baseImagesUrl https://github.com/helenYu2017/vscode-stc-hc/master/",
         "publish": "vsce publish --baseImagesUrl https://raw.githubusercontent.com/clangd/vscode-clangd/master/",
         "publish-openvsx": "ovsx publish --baseImagesUrl https://raw.githubusercontent.com/clangd/vscode-clangd/master/",
         "git-clang-format": "git-clang-format --extensions=ts"
@@ -102,7 +102,7 @@
             {
               "language": "hc-cpp",
               "scopeName": "source.hc-cpp",
-              "path": "./syntaxes/hc.tmLanguage.json"
+              "path": "hc.tmLanguage.json"
             }
         ],
         "configuration": {
